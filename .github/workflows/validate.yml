@@ -16,6 +16,9 @@ jobs:
       - uses: hacs/action@main
         with:
           category: integration
+          # Custom integrations aren't in the home-assistant/brands repo yet;
+          # skip that check until brand assets are submitted (see roadmap).
+          ignore: brands
 
   hassfest:
     name: Hassfest
