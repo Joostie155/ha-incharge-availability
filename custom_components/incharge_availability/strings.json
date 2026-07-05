@@ -1,0 +1,26 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Find a charging station",
+        "description": "Pick a point and radius on the map. Charging stations found in that area will be listed in the next step. The map defaults to your Home Assistant home location.",
+        "data": {
+          "location": "Search area"
+        }
+      },
+      "pick": {
+        "title": "Select a charging station",
+        "data": {
+          "station_id": "Charging station"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not reach the InCharge service. Please try again.",
+      "no_stations": "No charging stations found in that area. Try a larger radius or move the point."
+    },
+    "abort": {
+      "already_configured": "This charging station is already added."
+    }
+  }
+}
