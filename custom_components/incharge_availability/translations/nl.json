@@ -1,0 +1,37 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Zoek een laadpaal",
+        "description": "Kies een punt en straal op de kaart. Laadpalen die in dat gebied worden gevonden, verschijnen in de volgende stap. De kaart begint op de thuislocatie van je Home Assistant.",
+        "data": {
+          "location": "Zoekgebied"
+        }
+      },
+      "pick": {
+        "title": "Kies een laadpaal",
+        "data": {
+          "station_id": "Laadpaal"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Kan de InCharge-dienst niet bereiken. Probeer het opnieuw.",
+      "no_stations": "Geen laadpalen gevonden in dat gebied. Vergroot de straal of verplaats het punt."
+    },
+    "abort": {
+      "already_configured": "Deze laadpaal is al toegevoegd."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opties",
+        "description": "Hoe vaak moet Home Assistant de beschikbaarheid van deze laadpaal controleren?",
+        "data": {
+          "scan_interval_minutes": "Ophaalinterval (minuten)"
+        }
+      }
+    }
+  }
+}

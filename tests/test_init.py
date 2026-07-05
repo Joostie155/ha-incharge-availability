@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, patch
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.incharge_availability.const import (
@@ -59,6 +60,15 @@ async def test_setup_and_unload(hass: HomeAssistant) -> None:
     assert entry.state is ConfigEntryState.LOADED
     coordinator = hass.data[DOMAIN][entry.entry_id]
     assert coordinator.data["available"] == 1
+
+    # Entities are keyed on the stable station id, not the volatile entry id,
+    # so their history survives removing and re-adding the station.
+    registry = er.async_get(hass)
+    unique_ids = {
+        e.unique_id
+        for e in er.async_entries_for_config_entry(registry, entry.entry_id)
+    }
+    assert unique_ids == {"AB1234_available", "AB1234_available_connectors"}
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     assert entry.entry_id not in hass.data[DOMAIN]

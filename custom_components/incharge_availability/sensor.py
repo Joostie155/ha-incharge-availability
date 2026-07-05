@@ -49,12 +49,13 @@ class InChargeAvailabilitySensor(
         self, coordinator: InChargeCoordinator, entry: ConfigEntry
     ) -> None:
         super().__init__(coordinator)
-        self._attr_unique_id = f"{entry.entry_id}_available_connectors"
+        station_id = entry.data[CONF_STATION_ID]
+        self._attr_unique_id = f"{station_id}_available_connectors"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
+            identifiers={(DOMAIN, station_id)},
             name=entry.title,
             manufacturer="Vattenfall InCharge (unofficial)",
-            model=entry.data.get(CONF_STATION_ID),
+            model=station_id,
         )
 
     @property
