@@ -9,9 +9,16 @@ CONF_STATION_ID = "station_id"
 CONF_STATION_NAME = "station_name"
 CONF_RADIUS_KM = "radius_km"
 
+# Options entry keys.
+CONF_SCAN_INTERVAL_MINUTES = "scan_interval_minutes"
+
 # Defaults.
 DEFAULT_RADIUS_KM = 0.5
 DEFAULT_SCAN_INTERVAL_MINUTES = 5
+
+# Bounds for the user-configurable poll interval (options flow).
+MIN_SCAN_INTERVAL_MINUTES = 1
+MAX_SCAN_INTERVAL_MINUTES = 60
 
 # State attribute keys.
 ATTR_TOTAL = "total"

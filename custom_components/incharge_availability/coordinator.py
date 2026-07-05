@@ -26,12 +26,13 @@ class InChargeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         latitude: float,
         longitude: float,
         radius_km: float,
+        scan_interval_minutes: int = DEFAULT_SCAN_INTERVAL_MINUTES,
     ) -> None:
         super().__init__(
             hass,
             _LOGGER,
             name=f"{DOMAIN} {station_id}",
-            update_interval=timedelta(minutes=DEFAULT_SCAN_INTERVAL_MINUTES),
+            update_interval=timedelta(minutes=scan_interval_minutes),
         )
         self._api = api
         self._station_id = station_id

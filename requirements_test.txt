@@ -1,0 +1,4 @@
+# Test dependencies. pytest-homeassistant-custom-component pulls in a matching
+# Home Assistant core plus pytest, pytest-asyncio and the test helpers.
+pytest-homeassistant-custom-component
+pytest-cov

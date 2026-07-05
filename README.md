@@ -33,6 +33,18 @@ See the [roadmap](#roadmap) for what's next.
 
 ## Installation (HACS)
 
+**Quick add** — click the button, confirm your Home Assistant address, and the
+repository opens straight inside HACS:
+
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Joostie155&repository=ha-incharge-availability&category=integration)
+
+Then **Download**, restart Home Assistant, and add the integration:
+
+[![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=incharge_availability)
+
+<details>
+<summary>Manual steps (if the buttons don't work)</summary>
+
 1. In HACS → ⋮ → **Custom repositories**, add
    `https://github.com/Joostie155/ha-incharge-availability` with category
    **Integration**.
@@ -40,8 +52,13 @@ See the [roadmap](#roadmap) for what's next.
 3. **Settings → Devices & Services → + Add Integration →** search for
    *Vattenfall InCharge availability*.
 
-<sub>Manual install: copy `custom_components/incharge_availability/` into your
-Home Assistant `config/custom_components/` folder and restart.</sub>
+Fully manual install (no HACS): copy `custom_components/incharge_availability/`
+into your Home Assistant `config/custom_components/` folder and restart.
+
+</details>
+
+> The buttons use [My Home Assistant](https://my.home-assistant.io/) — they open
+> *your* instance in your browser; nothing is sent anywhere else.
 
 ## Configuration
 
@@ -73,13 +90,23 @@ Please poll responsibly — the default interval is deliberately modest.
 
 ## Roadmap
 
-- [ ] `binary_sensor` "any connector free" per station
-- [ ] Configurable poll interval (options flow)
-- [ ] Diagnostics + proper unavailable handling
-- [ ] Translations beyond English
-- [ ] Tests + HACS default-repo submission
+- [x] `binary_sensor` "any connector free" per station
+- [x] Configurable poll interval (options flow)
+- [x] Test suite (config flow, options flow, setup/unload, parsing)
+- [x] Diagnostics (redacted config-entry download)
+- [x] Anchor entity ids on the station id (keep history across re-adds)
+- [x] Dutch translation
+- [ ] Brand assets + HACS default-repo submission
 
 Contributions and issues welcome.
+
+## Development
+
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements_test.txt
+pytest
+```
 
 ## License
 
