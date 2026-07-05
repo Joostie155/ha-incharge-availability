@@ -11,7 +11,7 @@ from .api import InChargeApi
 from .const import CONF_RADIUS_KM, CONF_STATION_ID, DEFAULT_RADIUS_KM, DOMAIN
 from .coordinator import InChargeCoordinator
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

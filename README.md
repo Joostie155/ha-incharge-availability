@@ -73,7 +73,7 @@ Please poll responsibly — the default interval is deliberately modest.
 
 ## Roadmap
 
-- [ ] `binary_sensor` "any connector free" per station
+- [x] `binary_sensor` "any connector free" per station
 - [ ] Configurable poll interval (options flow)
 - [ ] Diagnostics + proper unavailable handling
 - [ ] Translations beyond English
