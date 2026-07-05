@@ -74,12 +74,22 @@ Please poll responsibly — the default interval is deliberately modest.
 ## Roadmap
 
 - [x] `binary_sensor` "any connector free" per station
-- [ ] Configurable poll interval (options flow)
+- [x] Configurable poll interval (options flow)
+- [x] Test suite (config flow, options flow, setup/unload, parsing)
 - [ ] Diagnostics + proper unavailable handling
-- [ ] Translations beyond English
-- [ ] Tests + HACS default-repo submission
+- [ ] Anchor entity ids on the station id (keep history across re-adds)
+- [ ] Translations beyond English (Dutch)
+- [ ] Brand assets + HACS default-repo submission
 
 Contributions and issues welcome.
+
+## Development
+
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements_test.txt
+pytest
+```
 
 ## License
 

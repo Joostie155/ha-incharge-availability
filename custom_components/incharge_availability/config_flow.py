@@ -6,19 +6,29 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import InChargeApi, InChargeApiError, parse_station
 from .const import (
     CONF_RADIUS_KM,
+    CONF_SCAN_INTERVAL_MINUTES,
     CONF_STATION_ID,
     CONF_STATION_NAME,
     DEFAULT_RADIUS_KM,
+    DEFAULT_SCAN_INTERVAL_MINUTES,
     DEG_PER_KM,
     DOMAIN,
+    MAX_SCAN_INTERVAL_MINUTES,
+    MIN_SCAN_INTERVAL_MINUTES,
 )
 
 # The map/location picker returns {"latitude", "longitude", "radius" (metres)}.
@@ -29,6 +39,12 @@ class InChargeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for a Vattenfall InCharge charging station."""
 
     VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> InChargeOptionsFlow:
+        """Return the options flow handler for this integration."""
+        return InChargeOptionsFlow()
 
     def __init__(self) -> None:
         self._latitude: float | None = None
@@ -122,3 +138,34 @@ class InChargeConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
         return self.async_show_form(step_id="pick", data_schema=schema)
+
+
+class InChargeOptionsFlow(OptionsFlow):
+    """Let the user tune how often the station is polled."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the poll interval."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        current = self.config_entry.options.get(
+            CONF_SCAN_INTERVAL_MINUTES, DEFAULT_SCAN_INTERVAL_MINUTES
+        )
+        schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_SCAN_INTERVAL_MINUTES, default=current
+                ): selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=MIN_SCAN_INTERVAL_MINUTES,
+                        max=MAX_SCAN_INTERVAL_MINUTES,
+                        step=1,
+                        unit_of_measurement="min",
+                        mode=selector.NumberSelectorMode.BOX,
+                    )
+                ),
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=schema)

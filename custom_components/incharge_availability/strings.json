@@ -22,5 +22,16 @@
     "abort": {
       "already_configured": "This charging station is already added."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options",
+        "description": "How often should Home Assistant check this station's availability?",
+        "data": {
+          "scan_interval_minutes": "Poll interval (minutes)"
+        }
+      }
+    }
   }
 }
