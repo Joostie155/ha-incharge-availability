@@ -7,7 +7,7 @@ A custom [Home Assistant][ha] integration that reports the **live availability**
 of public EV charging stations, using the same data source the
 [Vattenfall InCharge][incharge] map website itself shows.
 
-You add a station through the UI (Settings → Devices & Services), and get a
+Add a station through the UI (Settings → Devices & Services) and you get a
 sensor with the number of connectors currently free — handy for a dashboard
 card or an automation that pings you when a spot in your street opens up.
 
@@ -18,18 +18,19 @@ card or an automation that pings you when a spot in your street opens up.
 
 ---
 
-## Status
+## Features
 
-Early days — this is the **base skeleton**, built to grow step by step. What
-works today:
-
-- 🔍 Config-flow setup: pick a point + radius on a map, choose a station from
-  the list found there.
-- 📊 One sensor per station: `available` connectors (with `total`, `street`,
-  `owner` and per-connector-type breakdown as attributes).
-- 🔁 Polls every few minutes via a `DataUpdateCoordinator`.
-
-See the [roadmap](#roadmap) for what's next.
+- 🔍 **UI setup** — pick a point + radius on a map, then choose a station from
+  the list found there. No YAML, no API key.
+- 📊 **Availability sensor** per station: `available` connectors, with `total`,
+  `street`, `owner` and a per-connector-type breakdown as attributes.
+- ✅ **"Any connector free" binary sensor** per station.
+- 🔁 **Polls via a `DataUpdateCoordinator`**, with a configurable interval
+  (1–60 min, default 5) in the integration's options.
+- 🧭 **Stable entity ids** anchored on the station id, so history survives a
+  re-add.
+- 🩺 **Diagnostics** — download a redacted config-entry dump for troubleshooting.
+- 🌍 English and Dutch translations.
 
 ## Installation (HACS)
 
@@ -62,15 +63,17 @@ into your Home Assistant `config/custom_components/` folder and restart.
 
 ## Configuration
 
-Everything is done in the UI — there is nothing to put in `configuration.yaml`,
-and no API key is required.
+Everything is done in the UI.
 
 1. The setup dialog shows a map centred on your Home Assistant home location.
    Move the point and adjust the radius to cover the station(s) you care about.
-2. Pick a station from the list. It becomes a device with an
-   *Available connectors* sensor.
-3. Repeat to add more stations (any operator that shows up on the InCharge map —
-   not only Vattenfall's own poles).
+2. Pick a station from the list. It becomes a device with an *Available
+   connectors* sensor and an *Any connector free* binary sensor.
+3. Repeat to add more stations — any operator that shows up on the InCharge map,
+   not only Vattenfall's own poles.
+
+To change how often a station is polled, open the integration and use
+**Configure**.
 
 ## How it works
 
@@ -87,18 +90,6 @@ step 1 and then select the station by its stable `id`. Availability comes from
 `connectorsData.connectors[].availableCount`.
 
 Please poll responsibly — the default interval is deliberately modest.
-
-## Roadmap
-
-- [x] `binary_sensor` "any connector free" per station
-- [x] Configurable poll interval (options flow)
-- [x] Test suite (config flow, options flow, setup/unload, parsing)
-- [x] Diagnostics (redacted config-entry download)
-- [x] Anchor entity ids on the station id (keep history across re-adds)
-- [x] Dutch translation
-- [ ] Brand assets + HACS default-repo submission
-
-Contributions and issues welcome.
 
 ## Development
 
