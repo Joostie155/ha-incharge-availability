@@ -121,6 +121,90 @@ async def test_flow_shows_error_when_no_stations(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "no_stations"}
 
 
+async def test_reconfigure_updates_search_location(hass: HomeAssistant) -> None:
+    """Reconfigure re-centres the search box but keeps the same station."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="AB1234",
+        title="Teststraat",
+        data={
+            CONF_STATION_ID: "AB1234",
+            CONF_LATITUDE: 52.0,
+            CONF_LONGITUDE: 5.0,
+            CONF_RADIUS_KM: 0.5,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    with patch(API_PATH) as api_cls:
+        api_cls.return_value.async_stations_near = AsyncMock(
+            return_value=[STATION]
+        )
+        api_cls.return_value.async_station_by_id = AsyncMock(
+            return_value=STATION
+        )
+
+        result = await entry.start_reconfigure_flow(hass)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reconfigure"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "location": {
+                    CONF_LATITUDE: 52.1,
+                    CONF_LONGITUDE: 5.2,
+                    "radius": 800,
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_LATITUDE] == 52.1
+    assert entry.data[CONF_LONGITUDE] == 5.2
+    assert entry.data[CONF_RADIUS_KM] == 0.8
+    # The station id is untouched, so the device and its history survive.
+    assert entry.data[CONF_STATION_ID] == "AB1234"
+
+
+async def test_reconfigure_errors_when_station_not_found(
+    hass: HomeAssistant,
+) -> None:
+    """If the station is no longer in the new box, show a no_stations error."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="AB1234",
+        title="Teststraat",
+        data={
+            CONF_STATION_ID: "AB1234",
+            CONF_LATITUDE: 52.0,
+            CONF_LONGITUDE: 5.0,
+            CONF_RADIUS_KM: 0.5,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    with patch(API_PATH) as api_cls:
+        api_cls.return_value.async_station_by_id = AsyncMock(return_value=None)
+
+        result = await entry.start_reconfigure_flow(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "location": {
+                    CONF_LATITUDE: 40.0,
+                    CONF_LONGITUDE: 1.0,
+                    "radius": 500,
+                }
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "no_stations"}
+
+
 async def test_options_flow_updates_interval(hass: HomeAssistant) -> None:
     """The options flow stores a new poll interval."""
     entry = MockConfigEntry(

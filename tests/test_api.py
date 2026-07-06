@@ -10,7 +10,9 @@ def test_parse_station_sums_connector_groups() -> None:
     raw = {
         "id": "AB1234",
         "street": "Teststraat",
+        "city": "Utrecht",
         "owner": "Tester",
+        "maxPower": 17250,
         "connectorsData": {
             "connectors": [
                 {"type": "Type2", "availableCount": 1, "count": 2},
@@ -23,8 +25,13 @@ def test_parse_station_sums_connector_groups() -> None:
 
     assert result["id"] == "AB1234"
     assert result["street"] == "Teststraat"
+    assert result["city"] == "Utrecht"
     assert result["available"] == 1
     assert result["total"] == 3
+    # 3 total, 1 free -> 2 occupied (charging or out of service).
+    assert result["occupied"] == 2
+    # maxPower is watts; exposed as kW.
+    assert result["max_power_kw"] == 17.2
     assert len(result["connector_types"]) == 2
 
 
@@ -36,6 +43,7 @@ def test_parse_station_falls_back_to_total_count() -> None:
 
     assert result["total"] == 4
     assert result["available"] == 0
+    assert result["occupied"] == 4
 
 
 def test_parse_station_handles_missing_data() -> None:
@@ -44,4 +52,6 @@ def test_parse_station_handles_missing_data() -> None:
 
     assert result["total"] == 0
     assert result["available"] == 0
+    assert result["occupied"] == 0
+    assert result["max_power_kw"] is None
     assert result["connector_types"] == []

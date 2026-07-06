@@ -139,6 +139,65 @@ class InChargeConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(step_id="pick", data_schema=schema)
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Re-centre the search box for an existing station without re-adding it.
+
+        The station id (and therefore the device and its history) stays the
+        same; only the coordinates and radius used to find it are updated. This
+        is the fix for a pole that dropped off because its search box no longer
+        covers it.
+        """
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            location = user_input[CONF_LOCATION]
+            latitude = location[CONF_LATITUDE]
+            longitude = location[CONF_LONGITUDE]
+            radius_km = max(location.get("radius", 500) / 1000, 0.1)
+
+            api = InChargeApi(async_get_clientsession(self.hass))
+            station_id = entry.data[CONF_STATION_ID]
+            try:
+                station = await api.async_station_by_id(
+                    station_id, latitude, longitude, radius_km * DEG_PER_KM
+                )
+            except InChargeApiError:
+                errors["base"] = "cannot_connect"
+            else:
+                if station is None:
+                    errors["base"] = "no_stations"
+                else:
+                    return self.async_update_reload_and_abort(
+                        entry,
+                        data_updates={
+                            CONF_LATITUDE: latitude,
+                            CONF_LONGITUDE: longitude,
+                            CONF_RADIUS_KM: radius_km,
+                        },
+                    )
+
+        schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_LOCATION,
+                    default={
+                        CONF_LATITUDE: entry.data[CONF_LATITUDE],
+                        CONF_LONGITUDE: entry.data[CONF_LONGITUDE],
+                        "radius": entry.data.get(CONF_RADIUS_KM, DEFAULT_RADIUS_KM)
+                        * 1000,
+                    },
+                ): selector.LocationSelector(
+                    selector.LocationSelectorConfig(radius=True)
+                ),
+            }
+        )
+        return self.async_show_form(
+            step_id="reconfigure", data_schema=schema, errors=errors
+        )
+
 
 class InChargeOptionsFlow(OptionsFlow):
     """Let the user tune how often the station is polled."""

@@ -1,27 +1,27 @@
-"""Sensor platform: number of available connectors at a station."""
+"""Sensor platform: available / occupied connectors, plus per-type breakdown."""
 
 from __future__ import annotations
 
-from homeassistant.components.sensor import (
-    SensorEntity,
-    SensorStateClass,
-)
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
+    ATTR_CITY,
     ATTR_CONNECTOR_TYPES,
+    ATTR_MAX_POWER_KW,
+    ATTR_OCCUPIED,
     ATTR_OWNER,
     ATTR_STATION_ID,
     ATTR_STREET,
     ATTR_TOTAL,
-    CONF_STATION_ID,
     DOMAIN,
 )
-from .coordinator import InChargeCoordinator
+from .coordinator import InChargeHub, InChargeRegionCoordinator
+from .entity import InChargeStationEntity
+
+_UNIT_CONNECTORS = "connectors"
 
 
 async def async_setup_entry(
@@ -29,47 +29,125 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the availability sensor for a station."""
-    coordinator: InChargeCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([InChargeAvailabilitySensor(coordinator, entry)])
+    """Set up the availability sensors for a station."""
+    hub: InChargeHub = hass.data[DOMAIN]
+    coordinator, station_id = hub.runtime[entry.entry_id]
+    name = entry.title
+
+    entities: list[SensorEntity] = [
+        InChargeAvailabilitySensor(coordinator, station_id, name),
+        InChargeOccupiedSensor(coordinator, station_id, name),
+    ]
+
+    # One "<type> available" sensor per connector type present at setup. New
+    # types that appear later are picked up on the next reload of the entry.
+    station = (coordinator.data or {}).get(station_id) or {}
+    for group in station.get("connector_types", []):
+        connector_type = group.get("type")
+        if connector_type:
+            entities.append(
+                InChargeConnectorTypeSensor(
+                    coordinator, station_id, name, connector_type
+                )
+            )
+
+    async_add_entities(entities)
 
 
-class InChargeAvailabilitySensor(
-    CoordinatorEntity[InChargeCoordinator], SensorEntity
-):
+class InChargeAvailabilitySensor(InChargeStationEntity, SensorEntity):
     """Number of connectors currently free at a charging station."""
 
-    _attr_has_entity_name = True
     _attr_name = "Available connectors"
     _attr_icon = "mdi:ev-station"
-    _attr_native_unit_of_measurement = "connectors"
+    _attr_native_unit_of_measurement = _UNIT_CONNECTORS
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
-        self, coordinator: InChargeCoordinator, entry: ConfigEntry
+        self,
+        coordinator: InChargeRegionCoordinator,
+        station_id: str,
+        station_name: str,
     ) -> None:
-        super().__init__(coordinator)
-        station_id = entry.data[CONF_STATION_ID]
+        super().__init__(coordinator, station_id, station_name)
         self._attr_unique_id = f"{station_id}_available_connectors"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, station_id)},
-            name=entry.title,
-            manufacturer="Vattenfall InCharge (unofficial)",
-            model=station_id,
-        )
 
     @property
     def native_value(self) -> int | None:
-        data = self.coordinator.data
-        return data.get("available") if data else None
+        station = self._station
+        return station.get("available") if station else None
 
     @property
     def extra_state_attributes(self) -> dict[str, object]:
-        data = self.coordinator.data or {}
+        station = self._station or {}
         return {
-            ATTR_TOTAL: data.get("total"),
-            ATTR_STREET: data.get("street"),
-            ATTR_OWNER: data.get("owner"),
-            ATTR_STATION_ID: data.get("id"),
-            ATTR_CONNECTOR_TYPES: data.get("connector_types"),
+            ATTR_TOTAL: station.get("total"),
+            ATTR_OCCUPIED: station.get("occupied"),
+            ATTR_STREET: station.get("street"),
+            ATTR_CITY: station.get("city"),
+            ATTR_OWNER: station.get("owner"),
+            ATTR_MAX_POWER_KW: station.get("max_power_kw"),
+            ATTR_STATION_ID: station.get("id"),
+            ATTR_CONNECTOR_TYPES: station.get("connector_types"),
         }
+
+
+class InChargeOccupiedSensor(InChargeStationEntity, SensorEntity):
+    """Connectors that are not free — charging or out of service."""
+
+    _attr_name = "Occupied connectors"
+    _attr_icon = "mdi:ev-plug-type2"
+    _attr_native_unit_of_measurement = _UNIT_CONNECTORS
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(
+        self,
+        coordinator: InChargeRegionCoordinator,
+        station_id: str,
+        station_name: str,
+    ) -> None:
+        super().__init__(coordinator, station_id, station_name)
+        self._attr_unique_id = f"{station_id}_occupied_connectors"
+
+    @property
+    def native_value(self) -> int | None:
+        station = self._station
+        return station.get("occupied") if station else None
+
+
+class InChargeConnectorTypeSensor(InChargeStationEntity, SensorEntity):
+    """Number of free connectors of one specific type (e.g. Type2, CCS)."""
+
+    _attr_icon = "mdi:ev-plug-type2"
+    _attr_native_unit_of_measurement = _UNIT_CONNECTORS
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(
+        self,
+        coordinator: InChargeRegionCoordinator,
+        station_id: str,
+        station_name: str,
+        connector_type: str,
+    ) -> None:
+        super().__init__(coordinator, station_id, station_name)
+        self._connector_type = connector_type
+        self._attr_name = f"{connector_type} available"
+        self._attr_unique_id = f"{station_id}_available_{connector_type}"
+
+    def _group(self) -> dict[str, object] | None:
+        station = self._station
+        if not station:
+            return None
+        for group in station.get("connector_types", []):
+            if group.get("type") == self._connector_type:
+                return group
+        return None
+
+    @property
+    def native_value(self) -> int | None:
+        group = self._group()
+        return group.get("available") if group else None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, object]:
+        group = self._group() or {}
+        return {ATTR_TOTAL: group.get("count")}

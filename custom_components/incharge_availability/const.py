@@ -22,8 +22,11 @@ MAX_SCAN_INTERVAL_MINUTES = 60
 
 # State attribute keys.
 ATTR_TOTAL = "total"
+ATTR_OCCUPIED = "occupied"
 ATTR_STREET = "street"
 ATTR_OWNER = "owner"
+ATTR_CITY = "city"
+ATTR_MAX_POWER_KW = "max_power_kw"
 ATTR_STATION_ID = "station_id"
 ATTR_CONNECTOR_TYPES = "connector_types"
 

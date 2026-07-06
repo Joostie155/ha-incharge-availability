@@ -13,6 +13,13 @@
         "data": {
           "station_id": "Charging station"
         }
+      },
+      "reconfigure": {
+        "title": "Re-centre the search",
+        "description": "Adjust the point and radius used to locate this station. The station itself stays the same; use this if it dropped off because its search area no longer covers it.",
+        "data": {
+          "location": "Search area"
+        }
       }
     },
     "error": {
@@ -20,7 +27,8 @@
       "no_stations": "No charging stations found in that area. Try a larger radius or move the point."
     },
     "abort": {
-      "already_configured": "This charging station is already added."
+      "already_configured": "This charging station is already added.",
+      "reconfigure_successful": "The search area was updated."
     }
   },
   "options": {
