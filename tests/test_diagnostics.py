@@ -47,8 +47,8 @@ async def test_diagnostics_redacts_location(hass: HomeAssistant) -> None:
     with patch(
         "custom_components.incharge_availability.InChargeApi"
     ) as api_cls:
-        api_cls.return_value.async_station_by_id = AsyncMock(
-            return_value=STATION
+        api_cls.return_value.async_stations_near = AsyncMock(
+            return_value=[STATION]
         )
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -59,4 +59,5 @@ async def test_diagnostics_redacts_location(hass: HomeAssistant) -> None:
     assert diagnostics["entry"]["data"][CONF_LONGITUDE] == REDACTED
     assert diagnostics["entry"]["data"][CONF_STATION_ID] == "AB1234"
     assert diagnostics["coordinator_data"]["available"] == 1
+    assert diagnostics["stations_in_region"] == 1
     assert diagnostics["last_update_success"] is True

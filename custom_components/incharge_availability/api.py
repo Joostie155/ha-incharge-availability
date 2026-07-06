@@ -107,6 +107,10 @@ def parse_station(raw: dict[str, Any]) -> dict[str, Any]:
 
     InCharge reports availability aggregated per connector *type*
     (``availableCount`` of ``count``), not per physical socket.
+
+    ``occupied`` is ``total - available``. The API does not distinguish a
+    connector that is actively charging from one that is out of service, so
+    this count covers both.
     """
     connector_data = raw.get("connectorsData") or {}
     groups = connector_data.get("connectors") or []
@@ -114,12 +118,19 @@ def parse_station(raw: dict[str, Any]) -> dict[str, Any]:
     if not total:
         total = int(connector_data.get("totalCount") or 0)
     available = sum(int(g.get("availableCount") or 0) for g in groups)
+
+    max_power_w = raw.get("maxPower")
+    max_power_kw = round(max_power_w / 1000, 1) if max_power_w else None
+
     return {
         "id": raw.get("id"),
         "street": raw.get("street"),
+        "city": raw.get("city"),
         "owner": raw.get("owner"),
         "available": available,
+        "occupied": max(total - available, 0),
         "total": total,
+        "max_power_kw": max_power_kw,
         "connector_types": [
             {
                 "type": g.get("type"),

@@ -5,18 +5,17 @@ from __future__ import annotations
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
+    ATTR_OCCUPIED,
     ATTR_STATION_ID,
     ATTR_STREET,
     ATTR_TOTAL,
-    CONF_STATION_ID,
     DOMAIN,
 )
-from .coordinator import InChargeCoordinator
+from .coordinator import InChargeHub, InChargeRegionCoordinator
+from .entity import InChargeStationEntity
 
 
 async def async_setup_entry(
@@ -25,45 +24,42 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the availability binary sensor for a station."""
-    coordinator: InChargeCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([InChargeAvailableBinarySensor(coordinator, entry)])
+    hub: InChargeHub = hass.data[DOMAIN]
+    coordinator, station_id = hub.runtime[entry.entry_id]
+    async_add_entities(
+        [InChargeAvailableBinarySensor(coordinator, station_id, entry.title)]
+    )
 
 
-class InChargeAvailableBinarySensor(
-    CoordinatorEntity[InChargeCoordinator], BinarySensorEntity
-):
+class InChargeAvailableBinarySensor(InChargeStationEntity, BinarySensorEntity):
     """On when at least one connector is free, off when the station is full."""
 
-    _attr_has_entity_name = True
     _attr_name = "Available"
     _attr_icon = "mdi:ev-station"
 
     def __init__(
-        self, coordinator: InChargeCoordinator, entry: ConfigEntry
+        self,
+        coordinator: InChargeRegionCoordinator,
+        station_id: str,
+        station_name: str,
     ) -> None:
-        super().__init__(coordinator)
-        station_id = entry.data[CONF_STATION_ID]
+        super().__init__(coordinator, station_id, station_name)
         self._attr_unique_id = f"{station_id}_available"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, station_id)},
-            name=entry.title,
-            manufacturer="Vattenfall InCharge (unofficial)",
-            model=station_id,
-        )
 
     @property
     def is_on(self) -> bool | None:
-        data = self.coordinator.data
-        if not data:
+        station = self._station
+        if not station:
             return None
-        return (data.get("available") or 0) > 0
+        return (station.get("available") or 0) > 0
 
     @property
     def extra_state_attributes(self) -> dict[str, object]:
-        data = self.coordinator.data or {}
+        station = self._station or {}
         return {
-            "available": data.get("available"),
-            ATTR_TOTAL: data.get("total"),
-            ATTR_STREET: data.get("street"),
-            ATTR_STATION_ID: data.get("id"),
+            "available": station.get("available"),
+            ATTR_OCCUPIED: station.get("occupied"),
+            ATTR_TOTAL: station.get("total"),
+            ATTR_STREET: station.get("street"),
+            ATTR_STATION_ID: station.get("id"),
         }

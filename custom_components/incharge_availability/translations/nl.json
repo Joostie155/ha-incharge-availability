@@ -13,6 +13,13 @@
         "data": {
           "station_id": "Laadpaal"
         }
+      },
+      "reconfigure": {
+        "title": "Zoekgebied opnieuw instellen",
+        "description": "Pas het punt en de straal aan waarmee deze laadpaal wordt gevonden. De laadpaal zelf blijft hetzelfde; gebruik dit als hij is weggevallen omdat het zoekgebied hem niet meer omvat.",
+        "data": {
+          "location": "Zoekgebied"
+        }
       }
     },
     "error": {
@@ -20,7 +27,8 @@
       "no_stations": "Geen laadpalen gevonden in dat gebied. Vergroot de straal of verplaats het punt."
     },
     "abort": {
-      "already_configured": "Deze laadpaal is al toegevoegd."
+      "already_configured": "Deze laadpaal is al toegevoegd.",
+      "reconfigure_successful": "Het zoekgebied is bijgewerkt."
     }
   },
   "options": {
