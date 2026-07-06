@@ -1,4 +1,9 @@
-# Vattenfall InCharge availability — Home Assistant integration
+<p align="center">
+  <img src="icons/icon.png" alt="InCharge availability icon" width="120" height="120">
+</p>
+
+<h1 align="center">Vattenfall InCharge availability</h1>
+<p align="center"><em>A Home Assistant integration</em></p>
 
 [![hacs][hacs-badge]][hacs-url]
 [![Validate](https://github.com/Joostie155/ha-incharge-availability/actions/workflows/validate.yml/badge.svg)](https://github.com/Joostie155/ha-incharge-availability/actions/workflows/validate.yml)
